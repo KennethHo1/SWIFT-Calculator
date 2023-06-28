@@ -1,0 +1,343 @@
+//
+//  ContentView.swift
+//  Kennys Calculator
+//
+//  Created by Kenneth Ho on 6/22/23.
+//
+
+import SwiftUI
+
+//creating items for buttons ------------------------------------------------------------------------
+
+enum CalcButton: String {
+    
+    //button items ----------------------------------------------------------------------------------
+    
+    case one = "1"
+    case two = "2"
+    case three = "3"
+    case four = "4"
+    case five = "5"
+    case six = "6"
+    case seven = "7"
+    case eight = "8"
+    case nine = "9"
+    case zero = "0"
+    case add = "+"
+    case subtract = "-"
+    case multiply = "*"
+    case divide = "/"
+    case equal = "="
+    case clear = "AC"
+    case decimal = "."
+    case percent = "%"
+    case neg = "-/+"
+    
+    //assigning colors for diff buttons -------------------------------------------------------------
+    
+    var buttonColor: Color {
+        switch self {
+        case .add, .subtract, .multiply, .divide, .equal:  //operators
+            return .orange
+        case .clear, .neg, .percent:                       //others
+            return Color(.lightGray)
+        default:                                           //numbers
+            return Color(.darkGray)
+        }
+    }
+    
+}
+
+//creating functionality ----------------------------------------------------------------------------
+
+enum Operation {
+    case add, subtract, multiply, divide, null
+}
+
+//creating interface --------------------------------------------------------------------------------
+
+struct ContentView: View {
+    
+    //creating variables ----------------------------------------------------------------------------
+    
+    @State var value = "0"                          //reset display to 0
+    @State var temp = 0.0                           //temp created for percentage
+    @State var runningNumber = 0.0                  //holder for first number
+    @State var currentOperation: Operation = .null  //holder for second number
+    @State var runningNumber2 = ""                  //holder for first number as String
+    
+    //assigning placements for items ----------------------------------------------------------------
+    
+    let buttons: [[CalcButton]] = [
+        [.clear, .neg, .percent, .divide],
+        [.seven, .eight, .nine, .multiply],
+        [.four, .five, .six, .subtract],
+        [.one, .two, .three, .add],
+        [.zero, .decimal, .equal]
+    ]
+    
+    //creating view ---------------------------------------------------------------------------------
+    
+    var body: some View {
+        
+        //ZStack for placing items on top of each other ---------------------------------------------
+        
+        ZStack {
+            
+            Color.black.edgesIgnoringSafeArea(.all)  //black background
+            
+            //VStack for placing items vertically ---------------------------------------------------
+            
+            VStack {
+                
+                Spacer()   //push buttons near bottom
+                
+                //HStack for placing items horizontally ---------------------------------------------
+                
+                HStack {
+                    Spacer()            //push display to right side
+                    Text(value)         //modifiers
+                        .bold()
+                        .font(.system(size: 64))
+                        .foregroundColor(.white)
+                }
+                .padding()      //centralizing display
+                
+                //button placements array form ------------------------------------------------------
+                
+                ForEach(buttons, id: \.self) { row in
+                    HStack(spacing: 12){                        //horizontal
+                        ForEach(row, id: \.self) { item in
+                            Button(action: {                    //tap detection
+                                self.didTap(button: item)
+                            },label: {                          //modifiers for buttons
+                                Text(item.rawValue)
+                                    .font(.system(size: 32))
+                                    .frame(
+                                        width: self.buttonWidth(item:
+                                            item),
+                                        height: self.buttonHeight())
+                                    .background(item.buttonColor)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(self.buttonWidth(item:
+                                        item)/2)
+                            })
+                        }
+                    }
+                    .padding(.bottom, 3)    //condense buttons together
+                }
+            }
+        }
+    }
+    
+    //functionality for tap detection----------------------------------------------------------------
+    
+    func didTap(button: CalcButton) {
+        switch button {
+            
+        //tapping operations-------------------------------------------------------------------------
+            
+        case .add, .subtract, .multiply, .divide, .equal:
+            
+            //storing firstValue and reset display after operation tapped ---------------------------
+            
+            if button == .add {
+                self.currentOperation = .add
+                self.runningNumber = Double(self.value) ?? 0
+                self.runningNumber2 = self.value
+            }
+            if button == .subtract {
+                self.currentOperation = .subtract
+                self.runningNumber = Double(self.value) ?? 0
+                self.runningNumber2 = self.value
+            }
+            if button == .multiply {
+                self.currentOperation = .multiply
+                self.runningNumber = Double(self.value) ?? 0
+                self.runningNumber2 = self.value
+            }
+            if button == .divide {
+                self.currentOperation = .divide
+                self.runningNumber = Double(self.value) ?? 0
+                self.runningNumber2 = self.value
+            }
+            
+            //applying math operations when equating-------------------------------------------------
+            
+            if button == .equal {
+                let runningValue = Int(self.runningNumber)          //first number as Int
+                let runningValue2 = String(self.runningNumber)      //first number as String
+                let runningValue3 = Double(self.runningNumber)      //first number as Double
+                let currentValue = Int(self.value) ?? 0             //second number as Int
+                let currentValue2 = String(self.value)              //second number as String
+                let currentValue3 = Double(self.value) ?? 0         //second number as Double
+                
+                //DESCRIPTION OF WHAT'S HAPPENING IN SWITCH
+                
+                //After pressing equal, every case is different
+                
+                //Checks first and second number as Strings so it can check for a decimal "."
+                
+                //If both or either have a decimal, it is treated as a Double
+                
+                //Else, it will be treated as an Intager
+                
+                switch self.currentOperation {
+                    
+                //addition
+                    
+                case .add:
+                    if runningValue2.contains(".") && currentValue2.contains(".") {
+                        self.value = "\(runningValue3 + currentValue3)"
+                    }
+                    else if runningValue2.contains(".") || currentValue2.contains(".") {
+                        self.value = "\(runningValue3 + currentValue3)"
+                    }
+                    else {
+                        self.value = "\(runningValue + currentValue)"
+                    }
+                    
+                //subtraction
+                    
+                case .subtract:
+                    if runningValue2.contains(".") && currentValue2.contains(".") {
+                        self.value = "\(runningValue3 - currentValue3)"
+                    }
+                    else if runningValue2.contains(".") || currentValue2.contains(".") {
+                        self.value = "\(runningValue3 - currentValue3)"
+                    }
+                    else {
+                        self.value = "\(runningValue - currentValue)"
+                    }
+                    
+                //multiplication
+                    
+                case .multiply:
+                    if runningValue2.contains(".") && currentValue2.contains(".") {
+                        self.value = "\(runningValue3 * currentValue3)"
+                    }
+                    else if runningValue2.contains(".") || currentValue2.contains(".") {
+                        self.value = "\(runningValue3 * currentValue3)"
+                    }
+                    else {
+                        self.value = "\(runningValue * currentValue)"
+                    }
+                    
+                //division
+                    
+                case .divide:
+                    if runningValue2.contains(".") && currentValue2.contains(".") {
+                        self.value = "\(runningValue3 / currentValue3)"
+                    }
+                    else if runningValue2.contains(".") || currentValue2.contains(".") {
+                        self.value = "\(runningValue3 / currentValue3)"
+                    }
+                    else {
+                        self.value = "\(runningValue / currentValue)"
+                    }
+                    
+                //if nothing
+                    
+                case .null:
+                    break
+                }
+            }
+            
+            //reset display to zero if anything else (safety mechanism)
+            
+            if button != .equal {
+                self.value = "0"
+            }
+            
+        //tapped clear (reset everything) -----------------------------------------------------------
+            
+        case .clear:
+            self.value = "0"
+            self.temp = 0.0
+            self.runningNumber = 0.0
+            self.runningNumber2 = ""
+            
+        //tapping others ----------------------------------------------------------------------------
+
+        case .decimal, .neg, .percent:
+            
+            //placing decimal and denys additional decimals
+            
+            if button == .decimal {
+                if self.value.contains(".") {
+                    break
+                }
+                else {
+                    self.value = "\(self.value)\(button.rawValue)"
+                }
+            }
+            
+            //adding or subtracting negative sign
+            
+            if button == .neg {
+                if self.value == "0" {
+                    self.value = "-"
+                }
+                else if self.value[self.value.startIndex] == "-" {
+                    self.value = String(self.value.dropFirst())
+                }
+                else {
+                    self.value = "\("-")\(self.value)"
+                }
+            }
+            
+            //multiplying current number by 0.01
+            
+            if button == .percent {
+                self.temp = Double(self.value) ?? 0
+                self.temp = self.temp * 0.01
+                self.value = String(self.temp)
+            }
+            
+        //placing numbers ---------------------------------------------------------------------------
+            
+        default:
+            let number = button.rawValue
+            if self.value == "0" {
+                value = number
+            }
+            else {
+                self.value = "\(self.value)\(number)"
+            }
+        }
+    }
+    
+    //calculating buttonWidth in relation to screen -------------------------------------------------
+    
+    func buttonWidth(item: CalcButton) -> CGFloat {
+        if item == .zero {
+            return (UIScreen.main.bounds.width - (4*12)) / 2
+        }
+        return (UIScreen.main.bounds.width - (5*12)) / 4
+    }
+    
+    //calculating buttonHeight in relation to screen ------------------------------------------------
+    
+    func buttonHeight() -> CGFloat {
+        return (UIScreen.main.bounds.width - (5*12)) / 4
+    }
+    
+    //removing end zeros (not utilized but concept for ex. 5.5 + 4.5 = 10 instead of 10.0)
+    
+    func removeEndZeros() {
+        var str = String(self.value)
+        while str[str.endIndex] == "0" || str[str.endIndex] == "."{
+            str = String(str.dropLast())
+        }
+        self.value = str
+    }
+    
+}
+
+//simulating ContentView/interface/functionality ----------------------------------------------------
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
